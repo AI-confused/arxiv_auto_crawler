@@ -1,0 +1,13 @@
+# Base api query url
+base_url: "http://export.arxiv.org/api/query?"
+log_dir: "/Users/blacktear/github//arxiv_scrawl/Log/"
+link_dir: "/Users/blacktear/github/arxiv_scrawl/Link/"
+metadata_dir: "/Users/blacktear/github/arxiv_scrawl/Metadata/"
+pdf_dir: "/Users/blacktear/github/arxiv_scrawl/Pdf/"
+# Search parameters
+search_query: 'cat:cs.LG'  # search for electron in all fields
+total_results : 10  # want 500 total results
+wait_time: 3  # number of seconds to wait beetween calls
+sortBy: 'submittedDate'
+sortOrder: 'descending'
+last_update_date: '2021-08-25'

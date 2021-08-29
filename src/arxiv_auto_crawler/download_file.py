@@ -64,7 +64,7 @@ if __name__ == '__main__':
                         for file in file_list:
                             daily_count += 1
                             remote_file_path = remote_file_directory + file
-                            local_file_path = local_path + file
+                            local_file_path = local_path + file + '.pdf'
                             # print(remote_file_path)
                             # print(local_file_path)
                             download_files_from_server(sftp, remote_file_path, local_file_path)
