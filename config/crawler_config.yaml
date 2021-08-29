@@ -6,7 +6,8 @@ metadata_dir: "/Users/blacktear/github/arxiv_scrawl/Metadata/"
 pdf_dir: "/Users/blacktear/github/arxiv_scrawl/Pdf/"
 # Search parameters
 search_query: 'cat:cs.LG'  # search for electron in all fields
-total_results : 10  # want 500 total results
+total_results : 10  # want [total_results]*5 total results
+time_gap: 5
 wait_time: 3  # number of seconds to wait beetween calls
 sortBy: 'submittedDate'
 sortOrder: 'descending'

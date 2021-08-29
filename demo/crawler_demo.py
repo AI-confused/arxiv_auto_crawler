@@ -6,5 +6,5 @@ from arxiv_auto_crawler.daily_crawl import *
 
 
 if __name__ == '__main__':
-    crawl = AutoCrawler('/Users/blacktear/github/arxiv_scrawl/config.yaml')
+    crawl = AutoCrawler('/Users/blacktear/github/arxiv_scrawl/config/crawler_config.yaml')
     crawl.daily_crawler()

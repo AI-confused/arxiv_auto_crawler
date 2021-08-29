@@ -1,7 +1,6 @@
 import datetime
 import urllib.request as libreq
 import time
-import pysftp
 import feedparser
 import json
 import logging
@@ -52,6 +51,8 @@ class AutoCrawler(object):
         self.logger.setLevel(logging.INFO)
 
         # output to log file handler
+        if not os.path.exists(self.log_dir):
+            os.mkdir(self.log_dir)
         file_handler = logging.FileHandler(os.path.join(self.log_dir, 'log-{}.log'.format(self.last_update_date)))
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
@@ -85,7 +86,7 @@ class AutoCrawler(object):
         """
         urllib.request.urlretrieve(url, file_path)
         self.logger.info('{} downloaded'.format(file_path.split('/')[-1]))
-        self.logger.info('sleeping for {}...'.format(time_gap))
+        self.logger.info('sleeping for {}s...'.format(time_gap))
         time.sleep(time_gap)
 
 
@@ -156,6 +157,8 @@ class AutoCrawler(object):
                             for link in entry.links:
                                 if link.rel == 'related':
                                     item['paper_link'] = link.href
+                            if not os.path.exists(self.link_dir):
+                                os.mkdir(self.link_dir)
                             self.link_file = os.path.join(self.link_dir, self.newly_update_date + '.txt')
                             if daily_counts == 1:
                                 with open(self.link_file, 'w') as f:
@@ -173,6 +176,8 @@ class AutoCrawler(object):
                         time.sleep(self.wait_time)
                     self.pdf_flag = 1
                     self.daily_pdfs = daily_counts
+                    if not os.path.exists(self.metadata_dir):
+                        os.mkdir(self.metadata_dir)
                     self.meta_file = os.path.join(self.metadata_dir, self.newly_update_date + '.json')
                     with open(self.meta_file, 'w') as f:
                         json.dump(self.metadatas, f)
@@ -193,20 +198,19 @@ class AutoCrawler(object):
                 # start download pdf
                 self.logger.info('start download pdfs...')
                 time.sleep(10)
-                time_gap = 10
-                self.logger.info('time gap: {}s'.format(time_gap))
+                if not hasattr(self, 'time_gap'):
+                    self.time_gap = (23 * 60 * 60) // self.daily_pdfs
+                self.logger.info('time gap: {}s'.format(self.time_gap))
                 with open(self.link_file) as f:
                     pdf_path = os.path.join(self.pdf_dir, self.newly_update_date)
                     if not os.path.exists(pdf_path):
-                        os.mkdir(pdf_path)
+                        os.makedirs(pdf_path)
                     for line in tqdm(f.readlines(), desc='download pdf progress'):
                         if line:
                             url = line.split(' ')[0]
                             paper_title = ' '.join(line.split(' ')[1:]).strip()
-                            # self.logger.info(url)
                             pdf_name = url.split('/')[4]
                             pdf_file_path = pdf_path + '/' + pdf_name + '-' + paper_title + '.pdf'
-                            # self.logger.info(pdf_file_path)
-                            self.get_paper_pdf(url, pdf_file_path, time_gap)
+                            self.get_paper_pdf(url, pdf_file_path, self.time_gap)
                 self.logger.info('download finished')
                 self.pdf_flag = 0

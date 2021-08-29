@@ -72,10 +72,12 @@ class PaperDownloader(object):
         sftp.cwd(file_path)
         directory_structure = sftp.listdir(file_path)
         return directory_structure
+
     
     def download_files_from_server(self, sftp, remoteFilePath, localFilePath):
         sftp.get(remoteFilePath, localFilePath)
         time.sleep(10)
+        
     
     def delete_files_from_server(self, sftp, file_path=None, file_directory=None):
         if file_path:
