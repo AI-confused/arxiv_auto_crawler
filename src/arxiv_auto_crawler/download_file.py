@@ -1,92 +1,132 @@
 import pysftp
-import paramiko
 import datetime
 import time
 import os
-import argparse
+import yaml
+import logging
 
 
-cnopts = pysftp.CnOpts()
-cnopts.hostkeys = None
-now = datetime.datetime.now()
-sched_time = now + datetime.timedelta(seconds=5)
+class PaperDownloader(object):
+    def __init__(self, task_config_path) -> None:
+        self.__update_by_dict(task_config_path)
+        self.__set_basic_log_config()
+        self.__set_default_attributes()
 
 
-def check_files_exist(sftp, file_path):
-    sftp.cwd(file_path)
-    directory_structure = sftp.listdir(file_path)
-    # print(directory_structure)
-    return directory_structure
+    def __update_by_dict(self, task_config_path: str):
+        """Update class attributes by dict.
+        
+        @task_config_path: configuration path
+        """
+        with open(task_config_path, 'r', encoding='utf-8') as f:
+            self.task_configuration = yaml.load(f.read(), Loader=yaml.FullLoader)
+        for key, val in self.task_configuration.items():
+            setattr(self, key, val)
+
+
+    def __set_default_attributes(self):
+        self.cnopts = pysftp.CnOpts()
+        self.cnopts.hostkeys = None
+
+
+    def __set_basic_log_config(self):
+        """Set basic logger configuration.
+
+        Private class function.
+        """
+        # get now time
+        self.now_time = datetime.datetime.now().strftime("%Y-%m-%d|%H:%M:%S")
+
+        # set logging format
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(funcName)s - %(message)s', 
+                                        datefmt='%Y-%m-%d | %H:%M:%S')
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.setLevel(logging.INFO)
+
+        # output to log file handler
+        file_handler = logging.FileHandler(os.path.join(self.log_dir, 'log-{}.log'.format(self.last_update_date)))
+        file_handler.setLevel(logging.INFO)
+        file_handler.setFormatter(formatter)
+
+        # output to cmd
+        stream_handler = logging.StreamHandler()
+        stream_handler.setLevel(logging.INFO)
+        stream_handler.setFormatter(formatter)
+
+        # add handler
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(stream_handler)
+
     
-def download_files_from_server(sftp, remoteFilePath, localFilePath):
-    sftp.get(remoteFilePath, localFilePath)
-    time.sleep(10)
+    def is_time_equal(self, now, sched) -> bool:
+        """
+        """
+        if not str(now).split(' ')[0] == str(sched).split(' ')[0]:
+            return False
+        if not str(now).split(' ')[1].split('.')[0] == str(sched).split(' ')[1].split('.')[0]:
+            return False
+        return True
+        
+
+    def check_files_exist(self, sftp, file_path):
+        sftp.cwd(file_path)
+        directory_structure = sftp.listdir(file_path)
+        return directory_structure
     
-def delete_files_from_server(sftp, file_path=None, file_directory=None):
-    if file_path:
-        sftp.remove(file_path)
-    if file_directory:
-        sftp.rmdir(file_directory)
+    def download_files_from_server(self, sftp, remoteFilePath, localFilePath):
+        sftp.get(remoteFilePath, localFilePath)
+        time.sleep(10)
+    
+    def delete_files_from_server(self, sftp, file_path=None, file_directory=None):
+        if file_path:
+            sftp.remove(file_path)
+        if file_directory:
+            sftp.rmdir(file_directory)
         
         
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='download from remote')
-    parser.add_argument('-hostname', type=str, default=None, required=True, help='set remote hostname')
-    parser.add_argument('-username', type=str, default=None, required=True, help='set remote user name')
-    parser.add_argument('-password', type=str, default=None, required=True, help='set remote password')
-    args = parser.parse_args()
-    while True:
-        now = datetime.datetime.now()
-        if now == sched_time:
-            with open('log_download.txt', 'a') as f:
-                f.write('*******************\n')
-                f.write('now_time :' + str(now) + '\n')
-            #print('download time: ' + str(now))
-            daily_count = 0
-            remote_path = '/home/arxiv_crawl/pdf/'
-            local_path = '/home/blackteat/PycharmProjects/arxiv_crawl/pdf/'
-            with pysftp.Connection(host=args.hostname, username=args.username, password=args.password, cnopts=cnopts) as sftp:
-                #print('connection successful....')
-                directory_list = check_files_exist(sftp, remote_path)
-                if len(directory_list) > 1:
-                    with open('log_download.txt', 'a') as f:
-                        f.write('strat download pdf\n')
-                    #print(directory_list)
-                    remote_file_directory = remote_path + directory_list[0] + '/'
-                    # print(remote_file_directory)
-                    file_list = check_files_exist(sftp, remote_file_directory)
-                    if len(file_list):
-                        # print(file_list)
-                        local_path = local_path + directory_list[0] + '/'
-                        if not os.path.exists(local_path):
-                            os.mkdir(local_path)
-                        # print(local_path)
-                        for file in file_list:
-                            daily_count += 1
-                            remote_file_path = remote_file_directory + file
-                            local_file_path = local_path + file + '.pdf'
-                            # print(remote_file_path)
-                            # print(local_file_path)
-                            download_files_from_server(sftp, remote_file_path, local_file_path)
-                        #print(daily_count)
-                        with open('log_download.txt', 'a') as f:
-                            f.write('today count:' + str(daily_count) + '\n')
-                        #print('transfer finished')
-                        time.sleep(20)
-                        for file in file_list:
-                            # print(file)
-                            remote_file_path = remote_file_directory + file
-                            delete_files_from_server(sftp, file_path=remote_file_path)
-                        delete_files_from_server(sftp, file_path=None, file_directory=remote_file_directory)
-                        #print('delete finished')
-                        with open('log_download.txt', 'a') as f:
-                            f.write('delete finished\n')
-                else:
-                    #print('not update pdfs'):q!
-                    with open('log_download.txt', 'a') as f:
-                        f.write('not update pdfs\n')
-            sched_time = sched_time + datetime.timedelta(days=1)
-            with open('log_download.txt', 'a') as f:
-                f.write('next download time: ' + str(sched_time) + '\n')
+    def paper_download(self):
+        sched_time = datetime.datetime.now() + datetime.timedelta(seconds=5)
+        while True:
+            now = datetime.datetime.now()
+            if self.is_time_equal(now, sched_time):
+                self.logger.info('download time: ' + str(now))
+                daily_count = 0
+
+                with pysftp.Connection(host=self.hostname, username=self.username, password=self.password, cnopts=self.cnopts) as sftp:
+                    self.logger.info('connection successful')
+                    directory_list = self.check_files_exist(sftp, self.remote_path)
+                    if len(directory_list) > 1:
+                        self.logger.info('start download pdf from remote server...')
+
+                        remote_file_directory = self.remote_path + directory_list[0] + '/'
+
+                        file_list = self.check_files_exist(sftp, remote_file_directory)
+                        if len(file_list):
+
+                            self.local_path = self.local_path + directory_list[0] + '/'
+                            if not os.path.exists(self.local_path):
+                                os.mkdir(self.local_path)
+
+                            for file in file_list:
+                                daily_count += 1
+                                remote_file_path = remote_file_directory + file
+                                local_file_path = self.local_path + file
+
+                                self.download_files_from_server(sftp, remote_file_path, local_file_path)
+                            self.logger.info('daily_count: {}'.format(daily_count))
+                            self.logger.info('today count:' + str(daily_count))
+                            self.logger.info('transfer finished')
+                            time.sleep(20)
+                            for file in file_list:
+                                remote_file_path = remote_file_directory + file
+                                self.delete_files_from_server(sftp, file_path=remote_file_path)
+                            self.delete_files_from_server(sftp, file_path=None, file_directory=remote_file_directory)
+                            self.logger.info('delete finished')
+                            with open('log_download.txt', 'a') as f:
+                                f.write('delete finished\n')
+                    else:
+                        self.logger.info('no update pdf')
+                sched_time = sched_time + datetime.timedelta(days=1)
+                self.logger.info('next download time: ' + str(sched_time))
                 
                 
