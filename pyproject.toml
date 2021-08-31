@@ -1,6 +1,11 @@
 [build-system]
 requires = [
     "setuptools>=42",
-    "wheel"
+    "wheel",
+    "tqdm",
+    "feedparser==6.0.8",
+    "pyyaml",
+    "pysftp",
+    "urllib3==1.25.3"
 ]
 build-backend = "setuptools.build_meta"

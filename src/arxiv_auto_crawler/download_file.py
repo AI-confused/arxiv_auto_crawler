@@ -130,7 +130,7 @@ class PaperDownloader(object):
                             self.logger.info('delete finished')
                     else:
                         self.logger.info('no update pdf on remote server')
-                sched_time = time.time.now() + datetime.timedelta(seconds=60)
+                sched_time = datetime.datetime.now() + datetime.timedelta(days=1)
                 self.logger.info('next check time: ' + str(sched_time))
                 
                 

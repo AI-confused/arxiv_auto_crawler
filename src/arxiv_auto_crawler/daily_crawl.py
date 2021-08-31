@@ -53,7 +53,7 @@ class AutoCrawler(object):
         # output to log file handler
         if not os.path.exists(self.log_dir):
             os.mkdir(self.log_dir)
-        file_handler = logging.FileHandler(os.path.join(self.log_dir, 'log-{}.log'.format(self.last_update_date)))
+        file_handler = logging.FileHandler(os.path.join(self.log_dir, 'log-{}.log'.format(self.log_date)))
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
 
