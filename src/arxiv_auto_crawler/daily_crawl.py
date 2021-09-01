@@ -72,7 +72,8 @@ class AutoCrawler(object):
         """
         if not str(now).split(' ')[0] == str(sched).split(' ')[0]:
             return False
-        if not str(now).split(' ')[1].split('.')[0] == str(sched).split(' ')[1].split('.')[0]:
+        if not ':'.join(str(now).split(' ')[1].split('.')[0].split(':')[:2]) ==\
+             ':'.join(str(sched).split(' ')[1].split('.')[0].split(':')[:2]):
             return False
         return True
 
@@ -180,7 +181,7 @@ class AutoCrawler(object):
                         os.mkdir(self.metadata_dir)
                     self.meta_file = os.path.join(self.metadata_dir, self.newly_update_date + '.json')
                     with open(self.meta_file, 'w') as f:
-                        json.dump(self.metadatas, f)
+                        json.dump(self.metadatas, f, indent=4)
                     self.metadatas = []
                     self.logger.info('today_items: %i' % daily_counts + '\n')
                     self.total_counts += daily_counts

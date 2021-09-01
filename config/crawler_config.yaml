@@ -5,7 +5,6 @@ metadata_dir: "/Users/blacktear/github/arxiv_auto_crawler/Metadata/"
 pdf_dir: "/Users/blacktear/github/arxiv_auto_crawler/Pdf/"
 search_query: 'cat:cs.LG'  # search for electron in all fields
 total_results : 100  # want [total_results]*5 total results
-time_gap: 60
 wait_time: 3  # number of seconds to wait beetween calls
 sortBy: 'submittedDate'
 sortOrder: 'descending'
