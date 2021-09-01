@@ -1,2 +1,28 @@
-# arxiv_scrawl
-auto scrawl for arrive data
+* 1. 使用指南
+** (1)在python(>=3.6)环境安装工具包
+    + pip install arxiv_auto_crawler
+** (2) 安装依赖包
+** (3) 新建配置文件 crawler_config.yaml
+    + 参考./config/crawler_config.yaml
+    + last_update_date为第一次部署爬虫时的起点日期，爬虫搜索到arxiv最新出版的论文日期后，在[total_results]x5的单次最大爬取数量下，向起点日期爬取，直到获取的论文日期为last_update_date。
+    + 随后爬虫停止，更新last_update_date为搜索到的最新论文出版日期，进入循环等待。如果后续 arxiv 有论文更新，就继续爬取，实现挂机爬论文。
+** (4) 三行代码开始全自动爬取
+    + from arxiv_auto_crawler import AutoCrawler
+    + crawl = AutoCrawler("crawler_config.yaml 的绝对地址")
+    + crawl.daily_crawler()
+* 2.本地从远程服务器自动拖取pdf
+** (1)新建配置文件 downloader_config.yaml
+    + 参考./config/downloader_config.yaml
+** (2) 同样是三行代码开始自动下载
+    + from arxiv_auto_crawler import PaperDownloader
+    + downloader = PaperDownloader("downloader_config.yaml绝对地址")
+    + downloader.paper_download()
+* 3.工具思路
+    + 之前试过用selenium模拟浏览器打开arxiv论文页面，再点击下载爬取论文。然鹅数量稍微多一些后，就会被反爬策略盯上，无法打开arxiv，而且selenium爬取的速度也很慢。
+    + 在arxiv官网找了很久，终于发现有官方提供的论文元数据接口可以调用，这简直是福音啊！官方接口提供某个类别的搜索，每次请求返回若干个元数据，稍微解析一下，就能获取论文信息。
+    + https://arxiv.org/help/api/user-manual#Architecture
+    + 接下来通过循环和time.sleep()来实现每天定时搜索有没有更新的论文，然后下载即可。
+    + 如果你需要爬取其他领域的论文(统计、经济、物理、数学、生物等)，只需要修改 crawler_config.yaml 文件中的 search_query 参数即可！
+    + 不同领域的search_query后续在github仓库的README中更新。
+    + 从此，终于可以躺着爬论文了。
+* 4.更多有趣的原创内容和工具尽在微信公众号「NLP情报局」
