@@ -5,7 +5,7 @@ import setuptools
 
 setuptools.setup(
     name="arxiv_auto_crawler",
-    version="0.0.4",
+    version="0.0.5",
     author="black_tears",
     author_email="21860437@zju.edu.cn",
     description="Used for crawling arxiv papers automatically.",
